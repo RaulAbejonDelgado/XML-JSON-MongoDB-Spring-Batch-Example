@@ -1,4 +1,4 @@
-package com.michaelcgood;
+package com.bilbomatica.demo.batch;
 
 import org.bson.Document;
 import org.json.JSONException;
@@ -84,7 +84,7 @@ public class JobConfiguration {
                 String result = doCollect();
                 String resultTwo = doCollectTwo();
                 String resultThree = doCollectThree();
-             
+
                 System.out.println(" RESULT:::::::::::::::::::::" + result);
                 
                 System.out.println(" RESULT:::::::::::::::::::::" + resultTwo);

@@ -3,13 +3,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.michaelcgood</groupId>
-	<artifactId>michaelcgood-spring-batch-mongodb</artifactId>
+	<groupId>com.bilbomatica.demo.batch</groupId>
+	<artifactId>demo_batch</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
-	<name>michaelcgood-spring-batch-mongodb</name>
-	<description>Michael C  Good - XML to JSON + MongoDB + Spring Batch Example</description>
+	<name>demo_batch</name>
+	<description>demo batch</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -44,15 +44,20 @@
 			<version>RELEASE</version>
 		</dependency>
 		<dependency>
-				<groupId>org.json</groupId>
-				<artifactId>json</artifactId>
-				<version>20170516</version>
-			</dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20170516</version>
+		</dependency>
 
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-data-mongodb</artifactId>
-			</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>3.9.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

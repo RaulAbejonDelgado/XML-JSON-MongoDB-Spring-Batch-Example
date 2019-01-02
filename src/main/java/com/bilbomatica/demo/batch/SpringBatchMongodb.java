@@ -1,4 +1,4 @@
-package com.michaelcgood;
+package com.bilbomatica.demo.batch;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
