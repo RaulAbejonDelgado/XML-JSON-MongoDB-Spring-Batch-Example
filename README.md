@@ -1,1 +1,1 @@
-![alt text] (https://github.com/RaulAbejonDelgado/XML-JSON-MongoDB-Spring-Batch-Example/blob/master/spring_batch_arquitectura_basica.png)
+![alt text] https://github.com/RaulAbejonDelgado/XML-JSON-MongoDB-Spring-Batch-Example/blob/master/spring_batch_arquitectura_basica.png
