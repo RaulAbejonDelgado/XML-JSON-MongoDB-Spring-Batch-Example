@@ -1,5 +1,6 @@
 package com.bilbomatica.demo.batch;
 
+import com.bilbomatica.demo.batch.pojo.Person;
 import org.bson.Document;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,11 +23,15 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,21 +50,29 @@ public class JobConfiguration {
 
     public static int PRETTY_PRINT_INDENT_FACTOR = 4;
 
+    private String dinamicSlash = "//";
+
+
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
                 .tasklet(new Tasklet() {
+
                     @Override
                     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-                        
-                        // get path of file in src/main/resources
-                        Path xmlDocPath =  Paths.get(getFilePath());
-                        
-                        // process the file to json
-                         String json = processXML2JSON(xmlDocPath);
-                         
-                         // insert json into mongodb
-                         insertToMongo(json);
+
+                        //File xmlDocPath =  Paths.get(getFilePath());
+                        File xmlDocPath =  getFilePath();
+                        File[] archivos = new File[xmlDocPath.listFiles().length];
+
+                        archivos = listarFicherosPorCarpeta(xmlDocPath);
+                        ArrayList<Person> personas = new ArrayList<>();
+                        for (File a : archivos) {
+                            personas.add((Person) processXML2Object(a));
+                        }
+                        insertToMongo(personas);
+
+                         //insertToMongo(json);
                         return RepeatStatus.FINISHED;
                     }
                 }).build();
@@ -86,9 +99,9 @@ public class JobConfiguration {
                 String resultThree = doCollectThree();
 
                 System.out.println(" RESULT:::::::::::::::::::::" + result);
-                
+
                 System.out.println(" RESULT:::::::::::::::::::::" + resultTwo);
-                
+//
                 System.out.println(" RESULT:::::::::::::::::::::" + resultThree);
                 
                 
@@ -97,36 +110,36 @@ public class JobConfiguration {
             }
         }).build();
     }
-    
-    
+
     // this will return the id of the policy that has a specific style
     public String doCollect(){
+
         Query query = new Query();
-        query.addCriteria(Criteria.where("Policy.style").is("STY_1.1")).fields().include("Policy.id");
-        String result = mongoTemplate.findOne(query, String.class, "foo");
+        query.addCriteria(Criteria.where("nombre").is("Raul"));
+        String result = mongoTemplate.findOne(query, Person.class, "foo").toString();
         return result;
+
     }
-    
+
     // this will return all Value elements (however there is only one).
     public String doCollectTwo(){
+
         Query query = new Query();
-        query.addCriteria(Criteria.where("Policy.style").is("STY_1.1")).fields().include("Policy.Group.Value");
-        String result = mongoTemplate.findOne(query, String.class, "foo");
-        
+        query.addCriteria(Criteria.where("nombre").is("drohne"));
+        String result = mongoTemplate.find(query, Person.class, "foo").toString();
+
         return result;
     }
-    
-    // 
-    
+
     // searches for policy with specific id and status date. includes only fields title and description within Value element.
     public String doCollectThree(){
+
         Query query = new Query();
-        query.addCriteria(Criteria.where("Policy.id").is("NRD-1").and("Policy.status.date").is("2017-10-18")).fields().include("Policy.Group.Value.title").include("Policy.Group.Value.description");
-        String result = mongoTemplate.findOne(query, String.class, "foo");
-        
+        query.addCriteria(Criteria.where("selfId").gt(1));
+        String result = mongoTemplate.find(query, Person.class, "foo").toString();
+
         return result;
     }
-    
 
     // our batch job
     @Bean
@@ -138,37 +151,48 @@ public class JobConfiguration {
     }
 
     // takes a parameter of xml path and returns json as a string
-    private String processXML2JSON(Path xmlDocPath) throws JSONException {
+    private Object processXML2Object(File xmlDocPath) throws JSONException, JAXBException {
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(Person.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        Person pe = (Person) jaxbUnmarshaller.unmarshal(xmlDocPath);
         
-        
-        String XML_STRING = null;
-        try {
-            XML_STRING = Files.lines(xmlDocPath).collect(Collectors.joining("\n"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
-        JSONObject xmlJSONObj = XML.toJSONObject(XML_STRING);
-        String jsonPrettyPrintString = xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR);
-        System.out.println("PRINTING STRING :::::::::::::::::::::" + jsonPrettyPrintString);
-        
-        return jsonPrettyPrintString;
+        return pe;
     }
     
     // no parameter method for creating the path to our xml file
-    private String getFilePath(){
-        
-        String fileName = "FakePolicy.xml";
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-        String xmlFilePath = file.getAbsolutePath();
-        
-        return xmlFilePath;
+    private File getFilePath() throws JAXBException {
+
+        File directorio = null;
+
+        directorio = new File(System.getProperty("user.dir") + dinamicSlash + "personas" + dinamicSlash );
+
+        return directorio;
     }
     
     // inserts to our mongodb
-    private void insertToMongo(String jsonString){
-        Document doc = Document.parse(jsonString);
-        mongoTemplate.insert(doc, "foo");
+    private void insertToMongo(ArrayList<Person> objetos){
+        //Document doc = Document.parse(jsonString);
+        //Person p = (Person) jsonString;
+        for(Person p : objetos){
+            mongoTemplate.insert(p, "foo");
+        }
+    }
+
+    private static File[] listarFicherosPorCarpeta(File carpeta) {
+        File[] archivos = new File[carpeta.listFiles().length];
+        int contador = 0;
+        for (final File ficheroEntrada : carpeta.listFiles()) {
+            if (ficheroEntrada.isDirectory()) {
+                listarFicherosPorCarpeta(ficheroEntrada);
+            } else {
+                if(contador <  carpeta.listFiles().length){
+                    archivos[contador] =  ficheroEntrada;
+                    contador++;
+                }
+                System.out.println(ficheroEntrada.getName());
+            }
+        }
+        return archivos;
     }
 }    
